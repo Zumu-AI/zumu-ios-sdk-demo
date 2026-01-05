@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "zumu-ios-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Zumu-AI/zumu-ios-sdk",
+      "state" : {
+        "branch" : "main",
+        "revision" : "64b790308186ac628407e729253dc8f5db27ff75"
+      }
+    }
+  ],
+  "version" : 2
+}
