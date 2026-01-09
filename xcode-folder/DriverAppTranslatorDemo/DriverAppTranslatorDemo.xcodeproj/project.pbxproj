@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D448F4F22EEB69F000EFE56D /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = D448F4F12EEB69F000EFE56D /* LiveKit */; };
 		D448F4F52EEB6A2400EFE56D /* LiveKitComponents in Frameworks */ = {isa = PBXBuildFile; productRef = D448F4F42EEB6A2400EFE56D /* LiveKitComponents */; };
+		D448F4F82EEB6B5000EFE56D /* LiveKitKrispNoiseFilter in Frameworks */ = {isa = PBXBuildFile; productRef = D448F4F72EEB6B5000EFE56D /* LiveKitKrispNoiseFilter */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 			files = (
 				D448F4F22EEB69F000EFE56D /* LiveKit in Frameworks */,
 				D448F4F52EEB6A2400EFE56D /* LiveKitComponents in Frameworks */,
+				D448F4F82EEB6B5000EFE56D /* LiveKitKrispNoiseFilter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +79,7 @@
 			packageProductDependencies = (
 				D448F4F12EEB69F000EFE56D /* LiveKit */,
 				D448F4F42EEB6A2400EFE56D /* LiveKitComponents */,
+				D448F4F72EEB6B5000EFE56D /* LiveKitKrispNoiseFilter */,
 			);
 			productName = DriverAppTranslatorDemo;
 			productReference = D415C8412ED5A8C70091530A /* DriverAppTranslatorDemo.app */;
@@ -109,6 +112,7 @@
 			packageReferences = (
 				D448F4F02EEB69EF00EFE56D /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 				D448F4F32EEB6A2400EFE56D /* XCRemoteSwiftPackageReference "components-swift" */,
+				D448F4F62EEB6B5000EFE56D /* XCRemoteSwiftPackageReference "swift-krisp-noise-filter" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D415C8422ED5A8C70091530A /* Products */;
@@ -372,6 +376,14 @@
 				minimumVersion = 0.1.6;
 			};
 		};
+		D448F4F62EEB6B5000EFE56D /* XCRemoteSwiftPackageReference "swift-krisp-noise-filter" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/livekit/swift-krisp-noise-filter";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -384,6 +396,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D448F4F32EEB6A2400EFE56D /* XCRemoteSwiftPackageReference "components-swift" */;
 			productName = LiveKitComponents;
+		};
+		D448F4F72EEB6B5000EFE56D /* LiveKitKrispNoiseFilter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D448F4F62EEB6B5000EFE56D /* XCRemoteSwiftPackageReference "swift-krisp-noise-filter" */;
+			productName = LiveKitKrispNoiseFilter;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
