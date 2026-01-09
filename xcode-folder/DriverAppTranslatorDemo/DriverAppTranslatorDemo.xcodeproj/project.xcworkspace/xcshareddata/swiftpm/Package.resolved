@@ -1,5 +1,5 @@
 {
-  "originHash" : "45565269512e70fc10d0122237d96cb8b5b948d0f9671d01c5a88748a8c8dda1",
+  "originHash" : "4366a9501c13a9bbee01469f2eff3086ad82544c2e15384228dba34cff5cd01e",
   "pins" : [
     {
       "identity" : "client-sdk-swift",
@@ -53,6 +53,15 @@
       "state" : {
         "revision" : "95ba0316a9b733e92bb6b071255ff46263bbe7dc",
         "version" : "3.15.1"
+      }
+    },
+    {
+      "identity" : "swift-krisp-noise-filter",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/livekit/swift-krisp-noise-filter",
+      "state" : {
+        "revision" : "c12a41f2afc95ee67994faf2ea7c87cde6d65cc6",
+        "version" : "0.0.8"
       }
     },
     {

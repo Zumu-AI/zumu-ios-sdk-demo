@@ -380,8 +380,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/livekit/swift-krisp-noise-filter";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.0.8;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
