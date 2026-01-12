@@ -4,8 +4,6 @@ struct RideshareActiveTripView: View {
     let trip: Trip
     let onChangeTripTapped: () -> Void
     let onCreateTripTapped: () -> Void
-    @State private var showTranslator = false
-    // @StateObject private var audioPlayer = AudioTestPlayer.shared
 
     var body: some View {
         ZStack {
@@ -18,69 +16,6 @@ struct RideshareActiveTripView: View {
 
                 Spacer()
 
-                // AI Translation button (bottom right corner)
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-
-                        VStack(spacing: 12) {
-                            /* // Test Audio button - Disabled (file not in Xcode project)
-                            Button(action: {
-                                if audioPlayer.isPlaying {
-                                    audioPlayer.stopAudio()
-                                } else {
-                                    audioPlayer.playTestAudio()
-                                }
-                            }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: audioPlayer.isPlaying ? "stop.circle.fill" : "speaker.wave.2.circle.fill")
-                                        .font(.system(size: 20))
-                                    Text(audioPlayer.isPlaying ? "Stop Audio" : "Test Audio")
-                                        .fontWeight(.semibold)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 14)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: audioPlayer.isPlaying ? [Color.red, Color.orange] : [Color.orange, Color.yellow]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(25)
-                                .shadow(color: .orange.opacity(0.4), radius: 10, x: 0, y: 5)
-                            }
-                            */
-
-                            // AI Translation button
-                            Button(action: { showTranslator = true }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "waveform.circle.fill")
-                                        .font(.system(size: 20))
-                                    Text("AI Translation")
-                                        .fontWeight(.semibold)
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 14)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(25)
-                                .shadow(color: .purple.opacity(0.4), radius: 10, x: 0, y: 5)
-                            }
-                        }
-                        .padding(.trailing, 16)
-                        .padding(.bottom, 16)
-                    }
-                }
-
                 // Bottom sheet with trip info
                 BottomTripSheet(
                     trip: trip,
@@ -88,23 +23,30 @@ struct RideshareActiveTripView: View {
                     onCreateTripTapped: onCreateTripTapped
                 )
             }
+
+            // Translation button overlay (right-aligned, floating above bottom sheet)
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    ZumuTranslatorButton(
+                        config: ZumuTranslator.TranslationConfig(
+                            driverName: trip.driverName,
+                            driverLanguage: trip.driverLanguage,
+                            passengerName: trip.passengerName,
+                            passengerLanguage: trip.passengerLanguage,
+                            tripId: trip.id
+                        ),
+                        apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
+                            ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
+                    )
+                    .padding(.trailing, 20) // Padding from right edge
+                }
+                .padding(.bottom, 300) // More padding from bottom sheet
+                .zIndex(999) // Ensure visibility above bottom sheet
+            }
         }
         .ignoresSafeArea()
-        .fullScreenCover(isPresented: $showTranslator) {
-            ZumuTranslatorView(
-                config: ZumuTranslator.TranslationConfig(
-                    driverName: trip.driverName,
-                    driverLanguage: trip.driverLanguage,
-                    passengerName: trip.passengerName,
-                    passengerLanguage: trip.passengerLanguage,
-                    tripId: trip.id,
-                    pickupLocation: trip.pickupLocation,
-                    dropoffLocation: trip.dropoffLocation
-                ),
-                apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
-                    ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
-            )
-        }
     }
 }
 

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ActiveTripView: View {
     let trip: Trip
-    @State private var showTranslation = false
 
     var body: some View {
         ZStack {
@@ -21,114 +20,33 @@ struct ActiveTripView: View {
 
                 Spacer()
 
-                // Main Zumu Translator Button
-                VStack(spacing: 32) {
-                    // Prominent Zumu SDK Button
-                    Button(action: {
-                        showTranslation = true
-                    }) {
-                        VStack(spacing: 16) {
-                            // Icon with glow effect
-                            ZStack {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.blue, Color.purple],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 120, height: 120)
-                                    .shadow(color: .blue.opacity(0.4), radius: 20, x: 0, y: 8)
-
-                                Image(systemName: "wand.and.stars")
-                                    .font(.system(size: 50))
-                                    .foregroundStyle(.white)
-                            }
-
-                            // Button text
-                            VStack(spacing: 8) {
-                                Text("Open Zumu Translator")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-
-                                Text("Real-time voice translation")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            // Translation context preview
-                            HStack(spacing: 12) {
-                                // Driver badge
-                                HStack(spacing: 6) {
-                                    Text(trip.driverLanguage)
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(.blue.opacity(0.1))
-                                        .foregroundColor(.blue)
-                                        .clipShape(Capsule())
-                                }
-
-                                Image(systemName: "arrow.left.arrow.right")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                // Passenger badge
-                                HStack(spacing: 6) {
-                                    Text(trip.passengerLanguage ?? "Auto-detect")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(.purple.opacity(0.1))
-                                        .foregroundColor(.purple)
-                                        .clipShape(Capsule())
-                                }
-                            }
-                        }
-                        .padding(32)
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [.white.opacity(0.5), .clear],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        )
-                        .shadow(color: .black.opacity(0.1), radius: 20, x: 0, y: 10)
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-
-                    // Info card
-                    InfoCard()
-                }
-                .padding(.horizontal, 24)
+                // Info card (centered in remaining space)
+                InfoCard()
+                    .padding(.horizontal, 24)
 
                 Spacer()
             }
-        }
-        .fullScreenCover(isPresented: $showTranslation) {
-            // Use the Zumu SDK's TranslatorView - it handles everything!
-            ZumuTranslatorView(
-                config: ZumuTranslator.TranslationConfig(
-                    driverName: trip.driverName,
-                    driverLanguage: trip.driverLanguage,
-                    passengerName: trip.passengerName,
-                    passengerLanguage: trip.passengerLanguage,
-                    tripId: trip.id,
-                    pickupLocation: trip.pickupLocation,
-                    dropoffLocation: trip.dropoffLocation
-                ),
-                apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"] ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
-            )
+
+            // Translation button overlay (bottom-right, always visible)
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    ZumuTranslatorButton(
+                        config: ZumuTranslator.TranslationConfig(
+                            driverName: trip.driverName,
+                            driverLanguage: trip.driverLanguage,
+                            passengerName: trip.passengerName,
+                            passengerLanguage: trip.passengerLanguage,
+                            tripId: trip.id
+                        ),
+                        apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
+                            ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
+                    )
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 20)
+                }
+            }
         }
     }
 }
@@ -282,13 +200,5 @@ struct FeatureRow: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
-    }
-}
-
-struct ScaleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }

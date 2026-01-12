@@ -3,51 +3,19 @@ import SwiftUI
 struct TripSelectionView: View {
     @Binding var selectedTrip: Trip?
     @Binding var showingTripPicker: Bool
-    @State private var showingTranslator = false
 
     let driver = Driver.current
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Driver info card
-            DriverInfoCard(driver: driver)
+        ZStack {
+            VStack(spacing: 24) {
+                // Driver info card
+                DriverInfoCard(driver: driver)
 
-            // Selected trip display
-            if let trip = selectedTrip {
-                TripCard(trip: trip)
-
-                // Start translation button
-                Button(action: {
-                    showingTranslator = true
-                }) {
-                    HStack {
-                        Image(systemName: "mic.fill")
-                        Text("Start Translation")
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                .fullScreenCover(isPresented: $showingTranslator) {
-                    ZumuTranslatorView(
-                        config: ZumuTranslator.TranslationConfig(
-                            driverName: trip.driverName,
-                            driverLanguage: trip.driverLanguage,
-                            passengerName: trip.passengerName,
-                            passengerLanguage: trip.passengerLanguage,
-                            tripId: trip.id,
-                            pickupLocation: trip.pickupLocation,
-                            dropoffLocation: trip.dropoffLocation
-                        ),
-                        apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
-                            ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
-                    )
-                }
-            } else {
+                // Selected trip display
+                if let trip = selectedTrip {
+                    TripCard(trip: trip)
+                } else {
                 // No trip selected state
                 VStack(spacing: 16) {
                     Image(systemName: "car.fill")
@@ -82,18 +50,42 @@ struct TripSelectionView: View {
             }
             .padding(.horizontal)
 
-            Spacer()
-        }
-        .padding(.top)
-        .sheet(isPresented: $showingTripPicker) {
-            TripPickerSheet(
-                selectedTrip: $selectedTrip,
-                showingPicker: $showingTripPicker,
-                onCreateNewTapped: {
-                    showingTripPicker = false
-                    // Create trip action would go here
+                Spacer()
+            }
+            .padding(.top)
+            .sheet(isPresented: $showingTripPicker) {
+                TripPickerSheet(
+                    selectedTrip: $selectedTrip,
+                    showingPicker: $showingTripPicker,
+                    onCreateNewTapped: {
+                        showingTripPicker = false
+                        // Create trip action would go here
+                    }
+                )
+            }
+
+            // Translation button overlay (bottom-right, only when trip selected)
+            if let trip = selectedTrip {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        ZumuTranslatorButton(
+                            config: ZumuTranslator.TranslationConfig(
+                                driverName: trip.driverName,
+                                driverLanguage: trip.driverLanguage,
+                                passengerName: trip.passengerName,
+                                passengerLanguage: trip.passengerLanguage,
+                                tripId: trip.id
+                            ),
+                            apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
+                                ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
+                        )
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
+                    }
                 }
-            )
+            }
         }
     }
 }
