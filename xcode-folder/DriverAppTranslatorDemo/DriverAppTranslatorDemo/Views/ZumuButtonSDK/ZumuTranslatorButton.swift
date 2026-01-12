@@ -23,40 +23,25 @@ public struct ZumuTranslatorButton: View {
 
     public var body: some View {
         ZStack(alignment: .bottom) {
-            // Main button container - width changes based on state
+            // Main button container - fixed width
             HStack(spacing: 12) {
-                // Show control buttons on left side (only in active states)
+                // Show mute button on left side (only in active states)
                 if viewModel.isConnected && viewModel.state != .connecting {
-                    HStack(spacing: 8) {
-                        // Mute button
-                        Button(action: {
-                            Task { await viewModel.toggleMic() }
-                        }) {
-                            Image(systemName: viewModel.isMicMuted ? "mic.slash.fill" : "mic.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(viewModel.isMicMuted ? .red : .white)
-                                .frame(width: 40, height: 40)
-                                .background(Circle().fill(.black.opacity(0.3)))
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .transition(.scale.combined(with: .opacity))
-
-                        // End session button (X)
-                        Button(action: {
-                            Task { await viewModel.disconnect() }
-                        }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 40, height: 40)
-                                .background(Circle().fill(.black.opacity(0.3)))
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .transition(.scale.combined(with: .opacity))
+                    // Mute button
+                    Button(action: {
+                        Task { await viewModel.toggleMic() }
+                    }) {
+                        Image(systemName: viewModel.isMicMuted ? "mic.slash.fill" : "mic.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(viewModel.isMicMuted ? .red : .white)
+                            .frame(width: 40, height: 40)
+                            .background(Circle().fill(.black.opacity(0.3)))
                     }
+                    .buttonStyle(PlainButtonStyle())
+                    .transition(.scale.combined(with: .opacity))
                 }
 
-                // Main button
+                // Main button - tap to start/stop
                 Button(action: {
                     Task { await viewModel.handleTap() }
                 }) {
@@ -66,12 +51,12 @@ public struct ZumuTranslatorButton: View {
 
                         // Center: State text
                         Text(viewModel.state.label)
-                            .font(.system(size: isCompact ? 16 : 18, weight: .semibold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.white)
                             .lineLimit(1)
                     }
-                    .padding(.horizontal, 20)
-                    .frame(width: isCompact ? 180 : 240, height: 60)
+                    .padding(.horizontal, 16)
+                    .frame(width: 200, height: 56)
                     .background(backgroundView)
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -98,13 +83,6 @@ public struct ZumuTranslatorButton: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showTranscript)
     }
 
-    // MARK: - Computed Properties
-
-    /// Whether button should be in compact format (inactive/connecting states)
-    private var isCompact: Bool {
-        viewModel.state == .inactive || viewModel.state == .connecting
-    }
-
     // MARK: - Visualization View
 
     @ViewBuilder
@@ -123,22 +101,8 @@ public struct ZumuTranslatorButton: View {
                 .scaleEffect(0.9)
 
         case .listening:
-            // Clean waveform without pulsating dots
-            if let localTrack = viewModel.localAudioTrack {
-                BarAudioVisualizer(
-                    audioTrack: localTrack,
-                    agentState: .listening,
-                    barCount: 5,
-                    barSpacingFactor: 0.08,
-                    barMinOpacity: 0.0 // No pulsating dots, clean waveform only
-                )
-                .frame(width: 44, height: 28)
-            } else {
-                // Fallback icon when no audio track
-                Image(systemName: "waveform")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
+            // Single pulsating line for listening
+            PulsatingLine(audioLevel: viewModel.audioLevel)
 
         case .thinking:
             // Pulsating dot for thinking/translating
@@ -197,7 +161,7 @@ enum ButtonState: Equatable {
         case .connecting:
             return "Cancel"
         case .listening:
-            return "Listening..."
+            return "Listening"
         case .thinking:
             return "Translating..."
         case .translating:
@@ -329,30 +293,24 @@ struct AnimatedGradientBackground: View {
             break
 
         case .listening:
-            // Medium pulse + flowing animation
+            // Flowing gradient (no pulse) - reacts to audio input
             withAnimation(.linear(duration: 3.0).repeatForever(autoreverses: false)) {
                 animationPhase = 1.0
             }
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                pulseScale = 1.02
-            }
 
         case .thinking:
-            // Slow contemplative wobble
+            // Only thinking state pulsates + wobbles
             withAnimation(.linear(duration: 4.0).repeatForever(autoreverses: false)) {
                 animationPhase = .pi * 2
             }
-            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                pulseScale = 1.015
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                pulseScale = 1.02 // Visible pulsating
             }
 
         case .translating:
-            // Fast energetic flow
+            // Fast energetic flow (no pulse) - reacts to audio output
             withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
                 animationPhase = 1.0
-            }
-            withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                pulseScale = 1.03
             }
         }
     }
@@ -398,27 +356,32 @@ struct PulsatingDot: View {
     }
 }
 
-// MARK: - Thinking Dots (Legacy - can remove if not needed)
+// MARK: - Pulsating Line for Listening State
 
-struct ThinkingDots: View {
-    @State private var animating = false
+/// Single vertical line that pulsates based on audio input level
+struct PulsatingLine: View {
+    let audioLevel: Float
+
+    @State private var isAnimating = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<3) { index in
-                Circle()
-                    .fill(.primary)
-                    .frame(width: 8, height: 8)
-                    .opacity(animating ? 1.0 : 0.3)
-                    .animation(
-                        .easeInOut(duration: 0.6)
-                            .repeatForever()
-                            .delay(Double(index) * 0.2),
-                        value: animating
-                    )
-            }
-        }
-        .onAppear { animating = true }
+        RoundedRectangle(cornerRadius: 2)
+            .fill(.white)
+            .frame(width: 4, height: baseHeight)
+            .scaleEffect(x: 1.0, y: heightScale)
+            .animation(.easeInOut(duration: 0.15), value: audioLevel)
+    }
+
+    private var baseHeight: CGFloat {
+        20
+    }
+
+    private var heightScale: CGFloat {
+        // Scale based on audio level (0.0 to 1.0)
+        let minScale: CGFloat = 0.5
+        let maxScale: CGFloat = 1.5
+        let scale = minScale + (CGFloat(audioLevel) * (maxScale - minScale))
+        return scale
     }
 }
 
@@ -555,6 +518,8 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
             )
 
             print("📞 Token source created with trip_id: \(config.tripId)")
+            print("📞 Driver: \(config.driverName) (\(config.driverLanguage))")
+            print("📞 Passenger: \(config.passengerName) (\(config.passengerLanguage))")
 
             // Create session
             let newSession = Session(
