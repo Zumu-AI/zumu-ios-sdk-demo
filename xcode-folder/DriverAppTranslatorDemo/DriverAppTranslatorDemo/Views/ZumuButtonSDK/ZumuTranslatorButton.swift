@@ -101,8 +101,22 @@ public struct ZumuTranslatorButton: View {
                 .scaleEffect(0.9)
 
         case .listening:
-            // Single pulsating line for listening
-            PulsatingLine(audioLevel: viewModel.audioLevel)
+            // Full waveform for listening (visualizes incoming audio)
+            if let localTrack = viewModel.localAudioTrack {
+                BarAudioVisualizer(
+                    audioTrack: localTrack,
+                    agentState: .listening,
+                    barCount: 5,
+                    barSpacingFactor: 0.08,
+                    barMinOpacity: 0.0 // No ambient pulsating
+                )
+                .frame(width: 44, height: 28)
+            } else {
+                // Fallback when no audio track
+                Image(systemName: "waveform")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
 
         case .thinking:
             // Pulsating dot for thinking/translating
@@ -555,6 +569,7 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
             startAudioLevelMonitoring()
 
             print("✅ Button: Connected to LiveKit")
+            print("🤖 Button: Initial agent state: \(newSession.agent.agentState)")
 
         } catch {
             state = .error("Connection Failed")
@@ -606,30 +621,40 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
 
     private func startAgentStatePolling() {
         pollingTask = Task { @MainActor in
+            var lastAgentState: AgentState?
+
             while !Task.isCancelled {
                 guard let session = session else { break }
 
                 let currentAgentState = session.agent.agentState
+
+                // Log agent state changes
+                if lastAgentState != currentAgentState {
+                    print("🤖 Button: Agent state changed from \(String(describing: lastAgentState)) to \(currentAgentState)")
+                    lastAgentState = currentAgentState
+                }
+
                 self.livekitAgentState = currentAgentState
 
                 // Update button state based on agent state
                 switch currentAgentState {
                 case .idle, .listening:
                     if self.state != .listening {
-                        print("🎧 Agent state: listening")
+                        print("🎧 Button: Transitioning to listening state")
                         self.state = .listening
                     }
                 case .thinking:
                     if self.state != .thinking {
-                        print("💭 Agent state: thinking")
+                        print("💭 Button: Transitioning to thinking state")
                         self.state = .thinking
                     }
                 case .speaking:
                     if self.state != .translating {
-                        print("🗣️ Agent state: speaking")
+                        print("🗣️ Button: Transitioning to speaking state")
                         self.state = .translating
                     }
                 @unknown default:
+                    print("⚠️ Button: Unknown agent state: \(currentAgentState)")
                     break
                 }
 

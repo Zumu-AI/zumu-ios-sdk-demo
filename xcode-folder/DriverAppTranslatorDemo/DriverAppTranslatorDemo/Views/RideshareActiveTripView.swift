@@ -40,6 +40,7 @@ struct RideshareActiveTripView: View {
                         apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
                             ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"
                     )
+                    .id(trip.id) // Force recreation when trip changes
                     .padding(.trailing, 20) // Padding from right edge
                 }
                 .padding(.bottom, 300) // More padding from bottom sheet
