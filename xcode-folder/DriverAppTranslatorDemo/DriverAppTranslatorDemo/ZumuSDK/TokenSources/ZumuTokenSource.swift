@@ -15,6 +15,8 @@ public final class ZumuTokenSource: TokenSourceConfigurable, Sendable {
         public let tripId: String?
         public let pickupLocation: String?
         public let dropoffLocation: String?
+        public let externalDriverId: String?
+        public let memberId: String?
 
         public init(driverName: String,
                     driverLanguage: String,
@@ -22,7 +24,9 @@ public final class ZumuTokenSource: TokenSourceConfigurable, Sendable {
                     passengerLanguage: String? = nil,
                     tripId: String? = nil,
                     pickupLocation: String? = nil,
-                    dropoffLocation: String? = nil) {
+                    dropoffLocation: String? = nil,
+                    externalDriverId: String? = nil,
+                    memberId: String? = nil) {
             self.driverName = driverName
             self.driverLanguage = driverLanguage
             self.passengerName = passengerName
@@ -30,6 +34,8 @@ public final class ZumuTokenSource: TokenSourceConfigurable, Sendable {
             self.tripId = tripId
             self.pickupLocation = pickupLocation
             self.dropoffLocation = dropoffLocation
+            self.externalDriverId = externalDriverId
+            self.memberId = memberId
         }
     }
 
@@ -60,7 +66,7 @@ public final class ZumuTokenSource: TokenSourceConfigurable, Sendable {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "session_id": config.tripId as Any,  // Backend now uses session_id
             "driver_name": config.driverName,
             "driver_language": config.driverLanguage,
@@ -69,6 +75,14 @@ public final class ZumuTokenSource: TokenSourceConfigurable, Sendable {
             "pickup_location": config.pickupLocation as Any,
             "dropoff_location": config.dropoffLocation as Any
         ]
+
+        // Add optional analytics fields if present
+        if let externalDriverId = config.externalDriverId {
+            body["external_driver_id"] = externalDriverId
+        }
+        if let memberId = config.memberId {
+            body["member_id"] = memberId
+        }
 
         print("📡 Requesting LiveKit token from: \(url.absoluteString)")
         print("📡 API Key: \(apiKey.prefix(15))...")

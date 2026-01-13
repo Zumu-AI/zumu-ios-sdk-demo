@@ -38,7 +38,9 @@ struct ActiveTripView: View {
                             driverLanguage: trip.driverLanguage,
                             passengerName: trip.passengerName,
                             passengerLanguage: trip.passengerLanguage,
-                            tripId: trip.id
+                            tripId: trip.id,
+                            externalDriverId: trip.externalDriverId,
+                            memberId: trip.memberId
                         ),
                         apiKey: ProcessInfo.processInfo.environment["ZUMU_API_KEY"]
                             ?? "zumu_iZkF5TngXZs3-HWAVjblozL2sB8H2jPi9sc38JRQvWk"

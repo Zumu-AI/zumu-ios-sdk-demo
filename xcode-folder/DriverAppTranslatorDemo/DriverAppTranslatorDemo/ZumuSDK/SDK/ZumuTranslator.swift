@@ -125,6 +125,8 @@ public class ZumuTranslator {
         public let tripId: String?
         public let pickupLocation: String?
         public let dropoffLocation: String?
+        public let externalDriverId: String?
+        public let memberId: String?
 
         public init(
             driverName: String,
@@ -133,7 +135,9 @@ public class ZumuTranslator {
             passengerLanguage: String? = nil,
             tripId: String? = nil,
             pickupLocation: String? = nil,
-            dropoffLocation: String? = nil
+            dropoffLocation: String? = nil,
+            externalDriverId: String? = nil,
+            memberId: String? = nil
         ) {
             self.driverName = driverName
             self.driverLanguage = driverLanguage
@@ -142,6 +146,8 @@ public class ZumuTranslator {
             self.tripId = tripId ?? UUID().uuidString
             self.pickupLocation = pickupLocation
             self.dropoffLocation = dropoffLocation
+            self.externalDriverId = externalDriverId
+            self.memberId = memberId
         }
     }
 
@@ -296,7 +302,9 @@ private struct ZumuTranslatorSessionView: View {
             passengerLanguage: config.passengerLanguage,
             tripId: config.tripId,
             pickupLocation: config.pickupLocation,
-            dropoffLocation: config.dropoffLocation
+            dropoffLocation: config.dropoffLocation,
+            externalDriverId: config.externalDriverId,
+            memberId: config.memberId
         )
 
         let tokenSource = ZumuTokenSource(

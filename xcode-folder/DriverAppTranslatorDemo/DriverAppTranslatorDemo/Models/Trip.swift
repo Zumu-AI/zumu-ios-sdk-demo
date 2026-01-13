@@ -9,6 +9,9 @@ struct Trip: Identifiable, Equatable {
     let pickupLocation: String
     let dropoffLocation: String
     let estimatedDuration: String
+    // New analytics fields
+    let externalDriverId: String?
+    let memberId: String?
 
     init(
         id: String = UUID().uuidString,
@@ -18,7 +21,9 @@ struct Trip: Identifiable, Equatable {
         passengerLanguage: String? = nil,
         pickupLocation: String,
         dropoffLocation: String,
-        estimatedDuration: String = "15 min"
+        estimatedDuration: String = "15 min",
+        externalDriverId: String? = nil,
+        memberId: String? = nil
     ) {
         self.id = id
         self.driverName = driverName
@@ -28,6 +33,8 @@ struct Trip: Identifiable, Equatable {
         self.pickupLocation = pickupLocation
         self.dropoffLocation = dropoffLocation
         self.estimatedDuration = estimatedDuration
+        self.externalDriverId = externalDriverId
+        self.memberId = memberId
     }
 }
 
@@ -41,7 +48,9 @@ extension Trip {
             passengerLanguage: nil, // Auto-detect language
             pickupLocation: "1510 Ocean Pkwy",
             dropoffLocation: "116 27th Ave",
-            estimatedDuration: "18 min"
+            estimatedDuration: "18 min",
+            externalDriverId: "DRV-00123",
+            memberId: "MEMBER-45678"
         ),
         // Russian driver with Arabic passenger
         Trip(
@@ -52,25 +61,33 @@ extension Trip {
             passengerLanguage: "Arabic",
             pickupLocation: "116 27th Ave",
             dropoffLocation: "241 37th St",
-            estimatedDuration: "12 min"
+            estimatedDuration: "12 min",
+            externalDriverId: "DRV-00456",
+            memberId: "MEMBER-78901"
         ),
         Trip(
             passengerName: "María García",
             passengerLanguage: "Spanish",
             pickupLocation: "123 Main St, San Francisco, CA",
-            dropoffLocation: "456 Oak Ave, San Francisco, CA"
+            dropoffLocation: "456 Oak Ave, San Francisco, CA",
+            externalDriverId: "DRV-00789",
+            memberId: "MEMBER-23456"
         ),
         Trip(
             passengerName: "Jean Dupont",
             passengerLanguage: "French",
             pickupLocation: "789 Market St, San Francisco, CA",
-            dropoffLocation: "321 Pine St, San Francisco, CA"
+            dropoffLocation: "321 Pine St, San Francisco, CA",
+            externalDriverId: "DRV-00123",
+            memberId: "MEMBER-34567"
         ),
         Trip(
             passengerName: "李明",
             passengerLanguage: nil, // Test auto-detect
             pickupLocation: "555 Grant Ave, San Francisco, CA",
-            dropoffLocation: "888 Broadway, San Francisco, CA"
+            dropoffLocation: "888 Broadway, San Francisco, CA",
+            externalDriverId: "DRV-00123",
+            memberId: "MEMBER-56789"
         )
     ]
 }
