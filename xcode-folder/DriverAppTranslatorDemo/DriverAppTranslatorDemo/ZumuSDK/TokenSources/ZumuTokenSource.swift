@@ -89,6 +89,14 @@ public final class ZumuTokenSource: TokenSourceConfigurable, Sendable {
         print("📡 Driver: \(config.driverName) (\(config.driverLanguage))")
         print("📡 Passenger: \(config.passengerName) (\(config.passengerLanguage ?? "Auto"))")
 
+        // Log analytics fields if present
+        if let externalDriverId = config.externalDriverId {
+            print("📡 External Driver ID: \(externalDriverId)")
+        }
+        if let memberId = config.memberId {
+            print("📡 Member ID: \(memberId)")
+        }
+
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await URLSession.shared.data(for: request)

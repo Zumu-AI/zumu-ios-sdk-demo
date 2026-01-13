@@ -105,6 +105,29 @@ struct TripPickerRow: View {
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
+
+            // Analytics fields display
+            HStack(spacing: 8) {
+                if let driverId = trip.externalDriverId {
+                    Label(driverId, systemImage: "person.circle")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(4)
+                }
+
+                if let memberId = trip.memberId {
+                    Label(memberId, systemImage: "person.fill")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.purple.opacity(0.1))
+                        .cornerRadius(4)
+                }
+            }
         }
         .padding(.vertical, 4)
     }
