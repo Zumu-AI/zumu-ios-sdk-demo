@@ -26,7 +26,7 @@ public struct ZumuTranslatorButton: View {
             // Main button container - fixed width
             HStack(spacing: 12) {
                 // Show mute button on left side (only in active states)
-                if viewModel.isConnected && viewModel.state != .connecting {
+                if viewModel.isConnected && viewModel.state != .connecting && viewModel.state != .disconnecting {
                     // Mute button
                     Button(action: {
                         Task { await viewModel.toggleMic() }
@@ -60,7 +60,7 @@ public struct ZumuTranslatorButton: View {
                     .background(backgroundView)
                 }
                 .buttonStyle(PlainButtonStyle())
-                .disabled(viewModel.state == .thinking)
+                .allowsHitTesting(viewModel.state != .thinking && viewModel.state != .disconnecting)
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.state)
             .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.isConnected)
@@ -89,8 +89,8 @@ public struct ZumuTranslatorButton: View {
     private var visualizationView: some View {
         switch viewModel.state {
         case .inactive:
-            // AI Translate icon
-            Image(systemName: "wand.and.stars")
+            // AI Translate icon - sparkles for AI
+            Image(systemName: "sparkles")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.9))
 
@@ -100,22 +100,26 @@ public struct ZumuTranslatorButton: View {
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .scaleEffect(0.9)
 
+        case .disconnecting:
+            // Loader for disconnecting
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(0.9)
+
         case .listening:
             // Full waveform for listening (visualizes incoming audio)
-            if let localTrack = viewModel.localAudioTrack {
-                BarAudioVisualizer(
-                    audioTrack: localTrack,
-                    agentState: .listening,
-                    barCount: 5,
-                    barSpacingFactor: 0.08,
-                    barMinOpacity: 0.0 // No ambient pulsating
-                )
-                .frame(width: 44, height: 28)
-            } else {
-                // Fallback when no audio track
-                Image(systemName: "waveform")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
+            // BarAudioVisualizer works with nil audioTrack - will still render
+            BarAudioVisualizer(
+                audioTrack: viewModel.localAudioTrack, // Pass nil if not available yet
+                agentState: .listening,
+                barCount: 5,
+                barSpacingFactor: 0.08, // LiveKit SDK best practice value
+                barMinOpacity: 1.0 // Solid white bars (no grey effect)
+            )
+            .frame(width: 50, height: 28)
+            .onAppear {
+                let trackStatus = viewModel.localAudioTrack != nil ? "with audio track" : "without audio track (will still render)"
+                print("🎵 Rendering BarAudioVisualizer in listening state: \(trackStatus)")
             }
 
         case .thinking:
@@ -124,20 +128,18 @@ public struct ZumuTranslatorButton: View {
 
         case .translating:
             // Clean waveform moving with agent speech
-            if let localTrack = viewModel.localAudioTrack {
-                BarAudioVisualizer(
-                    audioTrack: localTrack,
-                    agentState: viewModel.livekitAgentState ?? .speaking,
-                    barCount: 5,
-                    barSpacingFactor: 0.08,
-                    barMinOpacity: 0.2
-                )
-                .frame(width: 44, height: 28)
-            } else {
-                Image(systemName: "speaker.wave.3.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .symbolEffect(.variableColor)
+            // Use agent's audio track (not local microphone) to show agent speaking
+            BarAudioVisualizer(
+                audioTrack: viewModel.agentAudioTrack, // Agent's voice output
+                agentState: viewModel.livekitAgentState ?? .speaking,
+                barCount: 5,
+                barSpacingFactor: 0.08, // LiveKit SDK best practice value
+                barMinOpacity: 1.0 // Solid white bars (no grey effect)
+            )
+            .frame(width: 50, height: 28)
+            .onAppear {
+                let trackStatus = viewModel.agentAudioTrack != nil ? "with agent audio track" : "without agent audio track (will still render)"
+                print("🎵 Rendering BarAudioVisualizer in translating state: \(trackStatus)")
             }
 
         case .error:
@@ -166,7 +168,7 @@ public struct ZumuTranslatorButton: View {
 // MARK: - Button State
 
 enum ButtonState: Equatable {
-    case inactive, connecting, listening, thinking, translating, error(String)
+    case inactive, connecting, listening, thinking, translating, disconnecting, error(String)
 
     var label: String {
         switch self {
@@ -177,9 +179,11 @@ enum ButtonState: Equatable {
         case .listening:
             return "Listening"
         case .thinking:
-            return "Translating..."
+            return "Translating"
         case .translating:
             return "Speaking"
+        case .disconnecting:
+            return "Disconnecting"
         case .error(let msg):
             return msg
         }
@@ -200,7 +204,7 @@ struct AnimatedGradientBackground: View {
     // State-specific color pairs (exact specifications)
     private var colorPair: (Color, Color) {
         switch state {
-        case .inactive, .connecting:
+        case .inactive, .connecting, .disconnecting:
             // Idle: Calm, ready, professional
             return (
                 Color(hex: "7C3AED"), // Vibrant Purple
@@ -248,7 +252,7 @@ struct AnimatedGradientBackground: View {
         let colors = colorPair
 
         switch state {
-        case .inactive, .connecting:
+        case .inactive, .connecting, .disconnecting:
             // Static gradient for inactive states
             return LinearGradient(
                 colors: [colors.0, colors.1],
@@ -297,13 +301,17 @@ struct AnimatedGradientBackground: View {
     }
 
     private func startAnimation() {
-        // Reset animation
-        animationPhase = 0
-        pulseScale = 1.0
+        // Cancel any existing animations first
+        withAnimation(.linear(duration: 0)) {
+            animationPhase = 0
+            pulseScale = 1.0
+        }
 
         switch state {
-        case .inactive, .connecting, .error:
-            // Static, no animation
+        case .inactive, .connecting, .disconnecting, .error:
+            // Static, no animation - explicitly keep at 1.0
+            animationPhase = 0
+            pulseScale = 1.0
             break
 
         case .listening:
@@ -462,6 +470,7 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
     @Published var audioLevel: Float = 0.0
     @Published var transcripts: [TranscriptMsg] = []
     @Published var localAudioTrack: AudioTrack?
+    @Published var agentAudioTrack: AudioTrack? // Agent's voice output
     @Published var isMicMuted: Bool = false
     @Published var livekitAgentState: AgentState?
 
@@ -470,6 +479,7 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
     private var session: Session?
     private var pollingTask: Task<Void, Never>?
     private var audioLevelTask: Task<Void, Never>?
+    private var connectionTask: Task<Void, Error>?
 
     init(config: ZumuTranslator.TranslationConfig, apiKey: String) {
         self.config = config
@@ -484,8 +494,9 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
         case .connecting:
             // Cancel connection
             await disconnect()
-        case .listening, .translating:
-            // Disconnect when tapped in active states
+        case .listening, .translating, .thinking:
+            // Show disconnecting state, then disconnect
+            state = .disconnecting
             await disconnect()
         default:
             break
@@ -497,87 +508,123 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
         let localParticipant = session.room.localParticipant
         let currentlyEnabled = localParticipant.isMicrophoneEnabled()
 
+        print("🎤 Toggling mic: currently \(currentlyEnabled ? "enabled" : "disabled")")
+
         do {
+            // Set new state
             try await localParticipant.setMicrophone(enabled: !currentlyEnabled)
-            isMicMuted = !currentlyEnabled
-            print("🎤 Mic \(isMicMuted ? "muted" : "unmuted")")
+
+            // Read back the actual state after setting
+            let newState = localParticipant.isMicrophoneEnabled()
+            isMicMuted = !newState
+
+            print("🎤 Mic is now \(isMicMuted ? "muted" : "unmuted") (enabled: \(newState))")
         } catch {
             print("❌ Failed to toggle mic: \(error)")
         }
     }
 
     private func connect() async {
-        state = .connecting
+        // Cancel any existing connection attempt
+        connectionTask?.cancel()
 
-        do {
-            // End any existing session first
-            if let existingSession = session {
-                await existingSession.end()
-                session = nil
-            }
+        connectionTask = Task { @MainActor in
+            state = .connecting
 
-            // Create token source
-            let tokenConfig = ZumuTokenSource.TranslationConfig(
-                driverName: config.driverName,
-                driverLanguage: config.driverLanguage,
-                passengerName: config.passengerName,
-                passengerLanguage: config.passengerLanguage,
-                tripId: config.tripId
-            )
+            do {
+                // End any existing session first
+                if let existingSession = session {
+                    await existingSession.end()
+                    session = nil
+                }
 
-            let tokenSource = ZumuTokenSource(
-                apiKey: apiKey,
-                config: tokenConfig,
-                baseURL: "https://translator.zumu.ai"
-            )
+                // Create token source
+                let tokenConfig = ZumuTokenSource.TranslationConfig(
+                    driverName: config.driverName,
+                    driverLanguage: config.driverLanguage,
+                    passengerName: config.passengerName,
+                    passengerLanguage: config.passengerLanguage,
+                    tripId: config.tripId
+                )
 
-            print("📞 Token source created with trip_id: \(config.tripId)")
-            print("📞 Driver: \(config.driverName) (\(config.driverLanguage))")
-            print("📞 Passenger: \(config.passengerName) (\(config.passengerLanguage))")
+                let tokenSource = ZumuTokenSource(
+                    apiKey: apiKey,
+                    config: tokenConfig,
+                    baseURL: "https://translator.zumu.ai"
+                )
 
-            // Create session
-            let newSession = Session(
-                tokenSource: tokenSource,
-                options: SessionOptions(
-                    room: Room(
-                        roomOptions: RoomOptions(
-                            defaultAudioCaptureOptions: AudioCaptureOptions(),
-                            defaultAudioPublishOptions: AudioPublishOptions()
+                print("📞 Token source created with trip_id: \(config.tripId ?? "nil")")
+                print("📞 Driver: \(config.driverName) (\(config.driverLanguage))")
+                print("📞 Passenger: \(config.passengerName) (\(config.passengerLanguage ?? "auto"))")
+
+                // Check for cancellation
+                try Task.checkCancellation()
+
+                // Create session
+                let newSession = Session(
+                    tokenSource: tokenSource,
+                    options: SessionOptions(
+                        room: Room(
+                            roomOptions: RoomOptions(
+                                defaultAudioCaptureOptions: AudioCaptureOptions(),
+                                defaultAudioPublishOptions: AudioPublishOptions()
+                            )
                         )
                     )
                 )
-            )
 
-            newSession.room.add(delegate: self)
+                newSession.room.add(delegate: self)
 
-            // Start the session
-            await newSession.start()
+                // Check for cancellation before starting
+                try Task.checkCancellation()
 
-            self.session = newSession
-            self.isConnected = true
-            self.state = .listening
+                // Start the session
+                await newSession.start()
 
-            // Expose local audio track
-            if let firstAudioTrack = newSession.room.localParticipant.audioTracks.first,
-               let audioTrack = firstAudioTrack.track as? AudioTrack {
-                self.localAudioTrack = audioTrack
-                print("🎤 Local audio track available")
+                // Check for cancellation after start
+                try Task.checkCancellation()
+
+                self.session = newSession
+                self.isConnected = true
+                self.state = .listening
+
+                // Start monitoring first
+                startAgentStatePolling()
+                startAudioLevelMonitoring()
+
+                // Wait briefly for tracks to be published, then expose local audio track
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+                    if let firstAudioTrack = newSession.room.localParticipant.audioTracks.first,
+                       let audioTrack = firstAudioTrack.track as? AudioTrack {
+                        self.localAudioTrack = audioTrack
+                        print("🎤 Local audio track available: \(audioTrack)")
+                    } else {
+                        print("⚠️ No local audio track found yet - will be captured via didPublishTrack delegate")
+                        print("⚠️ Audio tracks count: \(newSession.room.localParticipant.audioTracks.count)")
+                    }
+                }
+
+                print("✅ Button: Connected to LiveKit")
+                print("🤖 Button: Initial agent state: \(newSession.agent.agentState as Any)")
+
+            } catch is CancellationError {
+                state = .inactive
+                print("🚫 Button: Connection cancelled by user")
+            } catch {
+                state = .error("Connection Failed")
+                print("❌ Button: Connection error: \(error)")
             }
-
-            // Start monitoring
-            startAgentStatePolling()
-            startAudioLevelMonitoring()
-
-            print("✅ Button: Connected to LiveKit")
-            print("🤖 Button: Initial agent state: \(newSession.agent.agentState)")
-
-        } catch {
-            state = .error("Connection Failed")
-            print("❌ Button: Connection error: \(error)")
         }
+
+        // Await the connection task
+        _ = await connectionTask?.result
     }
 
     func disconnect() async {
+        // Cancel all tasks including connection
+        connectionTask?.cancel()
         pollingTask?.cancel()
         audioLevelTask?.cancel()
 
@@ -590,6 +637,7 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
         state = .inactive
         audioLevel = 0.0
         localAudioTrack = nil
+        agentAudioTrack = nil
         isMicMuted = false
         transcripts.removeAll()
 
@@ -628,9 +676,13 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
 
                 let currentAgentState = session.agent.agentState
 
+                // Update agent audio track (for waveform during speaking)
+                self.agentAudioTrack = session.agent.audioTrack
+
                 // Log agent state changes
                 if lastAgentState != currentAgentState {
-                    print("🤖 Button: Agent state changed from \(String(describing: lastAgentState)) to \(currentAgentState)")
+                    let previousState = lastAgentState.map { "\($0)" } ?? "nil"
+                    print("🤖 Button: Agent state changed from \(previousState) to \(currentAgentState as Any)")
                     lastAgentState = currentAgentState
                 }
 
@@ -653,8 +705,8 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
                         print("🗣️ Button: Transitioning to speaking state")
                         self.state = .translating
                     }
-                @unknown default:
-                    print("⚠️ Button: Unknown agent state: \(currentAgentState)")
+                default:
+                    // Handle initializing or any other agent states
                     break
                 }
 
@@ -664,6 +716,17 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
     }
 
     // MARK: - RoomDelegate
+
+    nonisolated func room(_ room: Room, participant: LocalParticipant, didPublishTrack publication: LocalTrackPublication) {
+        Task { @MainActor in
+            print("🎤 Track published: \(publication.kind)")
+
+            if publication.kind == .audio, let audioTrack = publication.track as? AudioTrack {
+                self.localAudioTrack = audioTrack
+                print("🎤 Local audio track captured from publication: \(audioTrack)")
+            }
+        }
+    }
 
     nonisolated func room(_ room: Room, participant: RemoteParticipant?, didReceiveData data: Data, forTopic topic: String, encryptionType: EncryptionType) {
         Task { @MainActor in
