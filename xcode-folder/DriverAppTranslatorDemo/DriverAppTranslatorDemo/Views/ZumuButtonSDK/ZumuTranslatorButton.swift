@@ -116,6 +116,7 @@ public struct ZumuTranslatorButton: View {
                 barSpacingFactor: 0.08, // LiveKit SDK best practice value
                 barMinOpacity: 1.0 // Solid white bars (no grey effect)
             )
+            .foregroundStyle(.white) // Match button text color
             .frame(width: 50, height: 28)
             .onAppear {
                 let trackStatus = viewModel.localAudioTrack != nil ? "with audio track" : "without audio track (will still render)"
@@ -136,6 +137,7 @@ public struct ZumuTranslatorButton: View {
                 barSpacingFactor: 0.08, // LiveKit SDK best practice value
                 barMinOpacity: 1.0 // Solid white bars (no grey effect)
             )
+            .foregroundStyle(.white) // Match button text color
             .frame(width: 50, height: 28)
             .onAppear {
                 let trackStatus = viewModel.agentAudioTrack != nil ? "with agent audio track" : "without agent audio track (will still render)"
