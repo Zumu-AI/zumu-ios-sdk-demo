@@ -730,9 +730,9 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
         }
     }
 
-    nonisolated func room(_ room: Room, didDisconnectWithReason reason: DisconnectReason?) {
+    nonisolated func room(_ room: Room, didDisconnectWithError error: Error?) {
         Task { @MainActor in
-            print("🔌 Button: Room disconnected (reason: \(String(describing: reason)))")
+            print("🔌 Button: Room disconnected (error: \(String(describing: error)))")
             // Agent deleted the room (inactivity timeout) — clean up gracefully
             await disconnect()
         }
