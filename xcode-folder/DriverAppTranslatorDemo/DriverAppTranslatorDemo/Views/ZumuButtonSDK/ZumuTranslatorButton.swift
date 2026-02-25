@@ -730,6 +730,14 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
         }
     }
 
+    nonisolated func room(_ room: Room, didDisconnectWithReason reason: DisconnectReason?) {
+        Task { @MainActor in
+            print("🔌 Button: Room disconnected (reason: \(String(describing: reason)))")
+            // Agent deleted the room (inactivity timeout) — clean up gracefully
+            await disconnect()
+        }
+    }
+
     nonisolated func room(_ room: Room, participant: RemoteParticipant?, didReceiveData data: Data, forTopic topic: String, encryptionType: EncryptionType) {
         Task { @MainActor in
             guard topic == "lk.transcription" || topic.isEmpty else { return }
