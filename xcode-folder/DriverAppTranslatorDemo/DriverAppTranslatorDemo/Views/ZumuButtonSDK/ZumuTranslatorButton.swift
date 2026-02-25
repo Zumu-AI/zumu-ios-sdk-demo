@@ -738,13 +738,6 @@ class ButtonViewModel: NSObject, ObservableObject, RoomDelegate {
         }
     }
 
-    nonisolated func room(_ room: Room, didDisconnectWithError error: Error?) {
-        Task { @MainActor in
-            print("🔌 Button: Room disconnected (error: \(String(describing: error)))")
-            // Agent deleted the room (inactivity timeout) — clean up gracefully
-            await disconnect()
-        }
-    }
 
     nonisolated func room(_ room: Room, participant: RemoteParticipant?, didReceiveData data: Data, forTopic topic: String, encryptionType: EncryptionType) {
         Task { @MainActor in
