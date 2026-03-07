@@ -1,27 +1,28 @@
 import Foundation
 import SwiftUI
+import Combine
 
 class Driver: ObservableObject {
-    @Published var name: String {
-        didSet { UserDefaults.standard.set(name, forKey: "driverName") }
-    }
-    @Published var language: String {
-        didSet { UserDefaults.standard.set(language, forKey: "driverLanguage") }
-    }
-    @Published var vehicleInfo: String {
-        didSet { UserDefaults.standard.set(vehicleInfo, forKey: "driverVehicle") }
-    }
+    @Published var name: String
+    @Published var language: String
+    @Published var vehicleInfo: String
     let rating: Double = 4.9
 
+    private var cancellables = Set<AnyCancellable>()
+
     static let shared = Driver()
+    static var current: Driver { shared }
 
     private init() {
         self.name = UserDefaults.standard.string(forKey: "driverName") ?? "Peter"
         self.language = UserDefaults.standard.string(forKey: "driverLanguage") ?? "Russian"
         self.vehicleInfo = UserDefaults.standard.string(forKey: "driverVehicle") ?? "Toyota Camry • ABC 123"
-    }
 
-    static var current: Driver { shared }
+        // Persist changes to UserDefaults
+        $name.sink { UserDefaults.standard.set($0, forKey: "driverName") }.store(in: &cancellables)
+        $language.sink { UserDefaults.standard.set($0, forKey: "driverLanguage") }.store(in: &cancellables)
+        $vehicleInfo.sink { UserDefaults.standard.set($0, forKey: "driverVehicle") }.store(in: &cancellables)
+    }
 
     func updateProfile(name: String, language: String, vehicleInfo: String) {
         self.name = name
