@@ -3,14 +3,18 @@ import SwiftUI
 struct TripSelectionView: View {
     @Binding var selectedTrip: Trip?
     @Binding var showingTripPicker: Bool
-
-    let driver = Driver.current
+    @StateObject private var driver = Driver.shared
+    @State private var showingDriverEdit = false
 
     var body: some View {
         ZStack {
             VStack(spacing: 24) {
-                // Driver info card
+                // Driver info card — tap to edit
                 DriverInfoCard(driver: driver)
+                    .onTapGesture { showingDriverEdit = true }
+                    .sheet(isPresented: $showingDriverEdit) {
+                        DriverEditSheet(driver: driver)
+                    }
 
                 // Selected trip display
                 if let trip = selectedTrip {
@@ -128,6 +132,10 @@ struct DriverInfoCard: View {
                     Text(driver.language)
                         .font(.subheadline)
                         .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+                    Text("Tap to edit")
+                        .font(.caption2)
+                        .foregroundColor(.blue.opacity(0.6))
                 }
             }
         }
