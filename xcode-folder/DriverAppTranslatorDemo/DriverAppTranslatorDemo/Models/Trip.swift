@@ -48,7 +48,7 @@ extension Trip {
             driverName: "Georgi",
             driverLanguage: "Georgian",
             passengerName: "Felicia",
-            passengerLanguage: "English",
+            passengerLanguage: nil, // Auto-detect
             pickupLocation: "Brighton Beach, Brooklyn",
             dropoffLocation: "Midtown, Manhattan",
             estimatedDuration: "25 min",
