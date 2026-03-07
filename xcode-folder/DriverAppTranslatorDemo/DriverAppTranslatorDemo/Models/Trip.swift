@@ -58,7 +58,7 @@ extension Trip {
 
         // Georgian driver
         Trip(
-            driverName: "Georgi",
+            driverName: "Giorgi",
             driverLanguage: "Georgian",
             passengerName: "Felicia",
             passengerLanguage: nil, // Auto-detect
@@ -67,6 +67,45 @@ extension Trip {
             estimatedDuration: "25 min",
             externalDriverId: "DRV-00100",
             memberId: "MBR-00100"
+        ),
+
+        // Tajik driver
+        Trip(
+            driverName: "Firdavs",
+            driverLanguage: "Tajik",
+            passengerName: "Sarah",
+            passengerLanguage: nil, // Auto-detect
+            pickupLocation: "Kew Gardens, Queens",
+            dropoffLocation: "Wall Street, Manhattan",
+            estimatedDuration: "30 min",
+            externalDriverId: "DRV-00101",
+            memberId: "MBR-00101"
+        ),
+
+        // Persian driver
+        Trip(
+            driverName: "Dariush",
+            driverLanguage: "Persian",
+            passengerName: "Emma",
+            passengerLanguage: nil, // Auto-detect
+            pickupLocation: "Great Neck, Long Island",
+            dropoffLocation: "Midtown, Manhattan",
+            estimatedDuration: "30 min",
+            externalDriverId: "DRV-00102",
+            memberId: "MBR-00102"
+        ),
+
+        // Bengali driver
+        Trip(
+            driverName: "Rahim",
+            driverLanguage: "Bengali",
+            passengerName: "Jake",
+            passengerLanguage: nil, // Auto-detect
+            pickupLocation: "Kensington, Brooklyn",
+            dropoffLocation: "Union Square, Manhattan",
+            estimatedDuration: "22 min",
+            externalDriverId: "DRV-00103",
+            memberId: "MBR-00103"
         ),
 
         // ============================================================
