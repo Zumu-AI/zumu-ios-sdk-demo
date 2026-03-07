@@ -42,8 +42,21 @@ struct Trip: Identifiable, Equatable {
 extension Trip {
     static let samples: [Trip] = [
         // ============================================================
-        // DEFAULT: Georgian driver with English passenger
+        // DEFAULT: Uzbek driver with auto-detect passenger
         // ============================================================
+        Trip(
+            driverName: "Rustam",
+            driverLanguage: "Uzbek",
+            passengerName: "Velvet",
+            passengerLanguage: nil, // Auto-detect
+            pickupLocation: "Rego Park, Queens",
+            dropoffLocation: "Midtown, Manhattan",
+            estimatedDuration: "20 min",
+            externalDriverId: "DRV-00099",
+            memberId: "MBR-00099"
+        ),
+
+        // Georgian driver
         Trip(
             driverName: "Georgi",
             driverLanguage: "Georgian",
