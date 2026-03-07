@@ -14,12 +14,10 @@ struct TripCreationView: View {
     @State private var pickupLocation = ""
     @State private var dropoffLocation = ""
 
-    // Language options
-    private let languages = [
-        "Spanish", "French", "German", "Italian", "Portuguese",
-        "Chinese", "Japanese", "Korean", "Arabic", "Russian",
-        "Hindi", "Turkish", "Vietnamese", "Thai", "Polish"
-    ]
+    @State private var languageSearch = ""
+
+    // Use the full language list from Driver (74 languages)
+    private var languages: [String] { Driver.availableLanguages }
 
     var body: some View {
         NavigationView {
@@ -42,9 +40,17 @@ struct TripCreationView: View {
                     TextField("Driver Name", text: $driverName)
                         .textInputAutocapitalization(.words)
 
-                    Picker("Driver Language", selection: $driverLanguage) {
-                        ForEach(["English"] + languages, id: \.self) { language in
-                            Text(language).tag(language)
+                    NavigationLink {
+                        LanguagePickerView(
+                            selectedLanguage: $driverLanguage,
+                            title: "Driver Language"
+                        )
+                    } label: {
+                        HStack {
+                            Text("Driver Language")
+                            Spacer()
+                            Text(driverLanguage)
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
@@ -58,9 +64,17 @@ struct TripCreationView: View {
                         .tint(.blue)
 
                     if !useAutoDetect {
-                        Picker("Passenger Language", selection: $passengerLanguage) {
-                            ForEach(languages, id: \.self) { language in
-                                Text(language).tag(language)
+                        NavigationLink {
+                            LanguagePickerView(
+                                selectedLanguage: $passengerLanguage,
+                                title: "Passenger Language"
+                            )
+                        } label: {
+                            HStack {
+                                Text("Passenger Language")
+                                Spacer()
+                                Text(passengerLanguage)
+                                    .foregroundColor(.secondary)
                             }
                         }
                     } else {
@@ -140,6 +154,46 @@ struct TripCreationView: View {
 
         createdTrip = newTrip
         dismiss()
+    }
+}
+
+// MARK: - Searchable Language Picker (reusable)
+struct LanguagePickerView: View {
+    @Binding var selectedLanguage: String
+    let title: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var search = ""
+
+    var filtered: [String] {
+        if search.isEmpty { return Driver.availableLanguages }
+        return Driver.availableLanguages.filter {
+            $0.localizedCaseInsensitiveContains(search)
+        }
+    }
+
+    var body: some View {
+        List {
+            ForEach(filtered, id: \.self) { lang in
+                Button(action: {
+                    selectedLanguage = lang
+                    dismiss()
+                }) {
+                    HStack {
+                        Text(lang)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if selectedLanguage == lang {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                }
+            }
+        }
+        .searchable(text: $search, prompt: "Search languages...")
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
